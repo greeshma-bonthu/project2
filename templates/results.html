@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+   <link rel="stylesheet" href="app_style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+
+  <title>Search - University of New Haven</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+
+  </head>
+  <body>
+
+  <div class="container">
+    <div style="background:transparent !important" >
+      <div style="font-family: 'Pacifico', cursive;">
+        <p>
+          <center>
+        <font size="8">University of New Haven</font>
+          </center>
+        </p>
+      </div>
+    </div>
+
+  <form action="/search" method="get">
+    <div class="input-group">
+      <input type="text" class="form-control input-lg" name="query" id="source" placeholder="Search"  autofocus>
+
+      <div class="input-group-btn">
+        <button class="btn btn-primary btn-lg" type="submit">
+          <i class="glyphicon glyphicon-search"></i>
+        </button>
+      </div>
+    </div>
+  </form>
+<div>
+        <div id="result" style="color: white"></div>
+         <div id="soresult"></div>
+    <br><br>
+    </div>
+  <center>
+      <p>About <strong>{{ total }}</strong> results ({{ time}} seconds)</p>
+	  <p>Showing <strong>{{ per_page }}</strong> results per page</p>
+
+  </center>
+  <div class="table-responsive" >
+  <table class="table">
+
+
+{% for hit in res['hits']['hits']%}
+    <tbody>
+      <tr>
+          {% if "title" in hit["highlight"] %}
+                  <h3 ><a href="{{ hit['_source']['url'] }}" target="_blank">{{ hit["highlight"]["title"][0] |safe}}</a></h3>
+
+          {% else %}
+                 <h3 ><a href="{{ hit['_source']['url'] }}" target="_blank">{{ hit["_source"]["title"] }}</a></h3>
+          {% endif %}
+
+          {% if "description" in hit["highlight"] %}
+                 <div><p>{{ hit["highlight"]["description"][0] |safe}}</p></div>
+
+          {% else %}
+                 <div><p>{{ hit["_source"]["description"] }}</p></div>
+          {% endif %}
+
+
+
+      </tr>
+    <br>
+
+    </tbody>
+{% endfor %}
+  </table>
+{{ pagination.links }}
+  </div>
+     <footer class="footer">
+        <p>&copy; UNH</p>
+      </footer>
+
+      </div>
+    </div>
+
+
+  <script>
+
+    const $source = document.querySelector('#source');
+    const $result = document.querySelector('#result');
+
+    const typeHandler = function(e) {
+        $result.innerHTML = e.target.value;
+        console.log(e.target.value);
+
+        $.ajax({
+            url: "/auto",
+            type : 'POST',
+            cache: false,
+            data:{'data': e.target.value},
+            success: function(html)
+            {
+                console.log(html)
+                var data = html.aggregations.auto_complete.buckets
+
+                var _ = []
+                $.each(data, (index, value)=>{
+                    _.push(value.key)
+                });
+                console.log(_)
+                $( "#source" ).autocomplete({
+                    source: _
+                });
+            }
+        });
+
+    }
+
+    $source.addEventListener('input', typeHandler) // register for oninput
+    $source.addEventListener('propertychange', typeHandler) // for IE8
+
+
+
+
+
+
+</script>
+  </body>
+</html>
